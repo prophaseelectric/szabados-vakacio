@@ -8,7 +8,7 @@ const CONTAINER = process.env.PLAN_CONTAINER || "plan";
 const BLOB = process.env.PLAN_BLOB || "state.json";
 const COLLECTIONS = ["items", "comments", "people", "packing"];
 const LIMITS = { items: 400, comments: 1000, people: 60, packing: 300 };
-const MAXLEN = { title: 120, time: 30, note: 200, text: 600, name: 40, when: 60, emoji: 8 };
+const MAXLEN = { title: 120, time: 30, note: 200, text: 600, name: 40, when: 60, emoji: 8, by: 40, day: 10 };
 
 function emptyState() {
   return { version: 0, items: {}, comments: {}, people: {}, packing: {}, meals: {} };
@@ -62,7 +62,8 @@ function clean(obj, allowed) {
   for (const k of allowed) {
     if (!(k in obj)) continue;
     let v = obj[k];
-    if (typeof v === "string") { v = v.trim(); if (MAXLEN[k]) v = v.slice(0, MAXLEN[k]); }
+    // Text fields are always stored as trimmed, length-capped strings, so odd input can't break the app.
+    if (MAXLEN[k]) v = (v == null ? "" : String(v)).trim().slice(0, MAXLEN[k]);
     out[k] = v;
   }
   return out;
@@ -82,6 +83,7 @@ function validate(collection, data) {
     if ("order" in d) d.order = Number(d.order) || 0;
     if ("day" in d && !/^(\d{4}-\d{2}-\d{2})?$/.test(d.day)) throw badRequest("bad day");
   }
+  if (collection === "comments" && "day" in d && !/^(\d{4}-\d{2}-\d{2})?$/.test(d.day)) throw badRequest("bad day");
   if (collection === "packing" && "done" in d) d.done = !!d.done;
   return d;
 }
@@ -90,11 +92,13 @@ function badRequest(msg) { const e = new Error(msg); e.status = 400; return e; }
 const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
 function applyMutation(state, m) {
+  if (!m || typeof m !== "object" || Array.isArray(m)) throw badRequest("bad mutation");
   const { op, collection, id, data } = m;
   if (op === "meal") {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(m.day)) throw badRequest("bad day");
+    const md = data && typeof data === "object" ? data : {};
     const cur = Object.assign({}, state.meals[m.day] || {});
-    for (const k of ["breakfast", "lunch", "dinner"]) if (k in (data || {})) cur[k] = String(data[k] || "").trim().slice(0, 60);
+    for (const k of ["breakfast", "lunch", "dinner"]) if (k in md) cur[k] = String(md[k] || "").trim().slice(0, 60);
     state.meals[m.day] = cur;
     return { ok: true };
   }
@@ -146,7 +150,8 @@ app.http("mutatePlan", {
     let body;
     try { body = await req.json(); } catch (e) { return json(400, { error: "bad json" }); }
     const muts = Array.isArray(body) ? body : [body];
-    if (!muts.length || muts.length > 50) return json(400, { error: "1 to 50 mutations" });
+    // A drag can reorder a whole list in one save, so allow up to the item limit plus a margin.
+    if (!muts.length || muts.length > 500) return json(400, { error: "1 to 500 mutations" });
     const client = blobClient();
     for (let attempt = 0; attempt < 6; attempt++) {
       const { state, etag } = await readState(client);
