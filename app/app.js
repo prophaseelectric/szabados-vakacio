@@ -20,7 +20,7 @@
 
   let state = { version: -1, items: {}, comments: {}, people: {}, packing: {}, meals: {} };
   let items = [], comments = [], people = [], packing = [], meals = {};
-  let dragging = false, pendingRender = false, editing = null, online = true, pollTimer = null;
+  let dragging = false, pendingRender = false, editing = null, online = null, pollTimer = null;
   const sortables = []; const openThreads = new Set(); const seenItems = new Set(); let firstItemsRender = true;
 
   const nameInput = $("#myname");
