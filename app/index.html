@@ -31,7 +31,10 @@
     <div class="hero-row">
       <div class="who">
         <label for="myname">A neved</label>
-        <input type="text" id="myname" placeholder="Hogy tudjuk, ki kicsoda" maxlength="40" autocomplete="off">
+        <div class="name-row">
+          <input type="text" id="myname" placeholder="Hogy tudjuk, ki kicsoda" maxlength="40" autocomplete="off" enterkeyhint="done">
+          <button class="btn" id="savename" type="button">Mentés</button>
+        </div>
       </div>
       <div class="status" id="status"><span class="dot"></span><span id="statustext">Kapcsolódás…</span></div>
     </div>

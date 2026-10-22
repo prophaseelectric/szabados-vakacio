@@ -27,6 +27,16 @@
   try { nameInput.value = localStorage.getItem("szabados-name") || ""; } catch (e) {}
   nameInput.addEventListener("input", () => { try { localStorage.setItem("szabados-name", nameInput.value); } catch (e) {} renderItems(); });
   const myName = () => nameInput.value.trim();
+  function saveName() {
+    const n = myName();
+    if (!n) { toast("Írd be a neved, aztán mentsd."); nameInput.focus(); return; }
+    nameInput.value = n;
+    try { localStorage.setItem("szabados-name", n); } catch (e) {}
+    nameInput.blur(); renderItems();
+    toast("Mentve. Szia, " + n + "!");
+  }
+  $("#savename").addEventListener("click", saveName);
+  nameInput.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); saveName(); } });
   const needName = () => { if (myName()) return false; toast("Előbb írd be a neved fent."); nameInput.focus(); return true; };
 
   function toast(msg) { const t = el("div", "toast", msg); document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
