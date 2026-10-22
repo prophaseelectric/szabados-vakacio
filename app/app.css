@@ -58,6 +58,8 @@
   .who { display: flex; flex-direction: column; gap: 4px; min-width: 220px; max-width: 320px; }
   .who label { font-family: var(--display); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 500; color: rgba(255,255,255,0.95); }
   .who input { background: rgba(255,255,255,0.92); color: #23303D; border: 0; }
+  .name-row { display: flex; gap: 8px; align-items: center; }
+  .name-row input { flex: 1; min-width: 0; }
   .status { font-size: 14px; display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.95); }
   .status .dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,255,255,0.5); }
   .status.live .dot { background: var(--lime); box-shadow: 0 0 0 3px rgba(123,201,111,0.35); }
