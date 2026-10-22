@@ -11,6 +11,7 @@
     { key: "2026-11-01", label: "Vasárnap", date: "nov. 1." },
     { key: "2026-11-02", label: "Hétfő", date: "nov. 2.", tag: "Indulás haza" },
   ];
+  const DAY_KEYS = new Set(DAYS.map(d => d.key));
   const MEALS = [["breakfast", "Reggeli"], ["lunch", "Ebéd"], ["dinner", "Vacsora"]];
   const EMOJIS = ["📍","🏖️","🌊","🐬","🎢","🧱","🥾","🌮","🍦","🚤","🎃","🦁","🛶","⛵","🍕","☕","🎡","🌅","🛍️","🏛️"];
   const AUTO = [["seaworld","🐬"],["legoland","🧱"],["beach","🏖️"],["strand","🏖️"],["canyon","🥾"],["hike","🥾"],["túra","🥾"],["taco","🌮"],["coronado","⛵"],["seaport","🛍️"],["zoo","🦁"],["állatkert","🦁"],["balboa","🏛️"],["surf","🏄"],["kayak","🛶"],["kajak","🛶"],["sunset","🌅"],["naplemente","🌅"],["pizza","🍕"],["halloween","🎃"],["ice cream","🍦"],["fagyi","🍦"],["coffee","☕"],["kávé","☕"],["fair","🎡"],["boat","🚤"],["hajó","🚤"],["la jolla","🌊"]];
@@ -18,6 +19,9 @@
   const $ = (s, r) => (r || document).querySelector(s);
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 
+  const PLAN_KEY = "szabados-plan";
+  const OFFLINE_CACHED = "Nincs térerő · a legutóbb letöltött tervet látod";
+  let fromCache = false;
   let state = { version: -1, items: {}, comments: {}, people: {}, packing: {}, meals: {} };
   let items = [], comments = [], people = [], packing = [], meals = {};
   let dragging = false, pendingRender = false, editing = null, online = null, pollTimer = null;
@@ -36,19 +40,19 @@
     toast("Mentve. Szia, " + n + "!");
   }
   $("#savename").addEventListener("click", saveName);
-  nameInput.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); saveName(); } });
   const needName = () => { if (myName()) return false; toast("Előbb írd be a neved fent."); nameInput.focus(); return true; };
 
   function toast(msg) { const t = el("div", "toast", msg); document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
   function setStatus(text, live) { $("#statustext").textContent = text; $("#status").classList.toggle("live", !!live); }
   function colorFor(name) { let h = 0; for (const ch of String(name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return COLORS[h % COLORS.length]; }
-  function autoEmoji(title) { const t = title.toLowerCase(); for (const [k, e] of AUTO) if (t.includes(k)) return e; return "📍"; }
+  function autoEmoji(title) { const t = String(title).toLowerCase(); for (const [k, e] of AUTO) if (t.includes(k)) return e; return "📍"; }
 
   // ---- API ----
   function adopt(s) {
     if (!s || typeof s.version !== "number") return;
     if (s.version < state.version) return;
     state = s;
+    try { localStorage.setItem(PLAN_KEY, JSON.stringify(s)); } catch (e) {}
     const toArr = (m) => Object.values(m || {});
     items = toArr(s.items); comments = toArr(s.comments); people = toArr(s.people); packing = toArr(s.packing); meals = s.meals || {};
     renderItems(); renderComments(); renderPeople(); renderPacking(); renderMeals();
@@ -70,9 +74,10 @@
     } catch (e) { markOnline(false); toast("Nincs kapcsolat. Próbáld újra."); return null; }
   }
   function markOnline(ok) {
+    if (ok) fromCache = false;
     if (ok === online && state.version >= 0) return;
     online = ok;
-    setStatus(ok ? "Élő · mindenki látja a változásokat" : "Nincs kapcsolat, újrapróbálom…", ok);
+    setStatus(ok ? "Élő · mindenki látja a változásokat" : (fromCache ? OFFLINE_CACHED : "Nincs kapcsolat, újrapróbálom…"), ok);
   }
   function schedulePoll() {
     clearInterval(pollTimer);
@@ -121,6 +126,7 @@
   document.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && e.target.matches("input[type=text]")) {
       if (e.target.dataset.meal) { e.target.blur(); return; }
+      const ed = e.target.closest(".editor"); if (ed) { e.preventDefault(); const s = ed.querySelector("[data-edsave]"); if (s) s.click(); return; }
       const btn = e.target.parentElement && e.target.parentElement.querySelector("button"); if (btn) btn.click();
     }
   });
@@ -132,8 +138,10 @@
   function renderItems() {
     if (dragging) { pendingRender = true; return; }
     const me = myName();
+    const edEl = $(".editor");
+    const draft = edEl && editing === edEl.dataset.for ? { id: editing, title: $("#ed-title").value, time: $("#ed-time").value, note: $("#ed-note").value, emoji: ($(".editor .emojis button.on") || {}).textContent, focus: document.activeElement && document.activeElement.id } : null;
     const byDay = {};
-    items.forEach(it => { (byDay[it.day || ""] = byDay[it.day || ""] || []).push(it); });
+    items.forEach(it => { const k = DAY_KEYS.has(it.day) ? it.day : ""; (byDay[k] = byDay[k] || []).push(it); });
     Object.values(byDay).forEach(a => a.sort((x, y) => (x.order ?? 0) - (y.order ?? 0)));
     ["", ...DAYS.map(d => d.key)].forEach(key => {
       const list = $("#list-" + (key || "ideas")); list.textContent = "";
@@ -151,7 +159,7 @@
         const mine = !!me && ins.includes(me);
         const inBtn = el("button", "in" + (mine ? " me" : ""), mine ? "Benne vagyok ✓" : (ins.length ? "Benne vagyok · " + ins.length : "Benne vagyok")); inBtn.dataset.in = it.id; c.appendChild(inBtn);
         if (ins.length) c.appendChild(el("div", "names", ins.join(", ")));
-        if (editing === it.id) c.appendChild(buildEditor(it));
+        if (editing === it.id) c.appendChild(buildEditor(it, draft && draft.id === it.id ? draft : null));
         list.appendChild(c);
       });
       if (key) {
@@ -162,14 +170,14 @@
     if (items.length) firstItemsRender = false;
   }
 
-  function buildEditor(it) {
-    const ed = el("div", "editor");
+  function buildEditor(it, draft) {
+    const ed = el("div", "editor"); ed.dataset.for = it.id;
     const row = el("div", "row");
-    const title = el("input"); title.type = "text"; title.value = it.title || ""; title.placeholder = "Program"; title.maxLength = 120; title.id = "ed-title";
-    const time = el("input"); time.type = "text"; time.value = it.time || ""; time.placeholder = "Időpont (10:00, ebéd után…)"; time.maxLength = 30; time.id = "ed-time"; time.style.flex = "0 1 190px";
+    const title = el("input"); title.type = "text"; title.value = draft ? draft.title : (it.title || ""); title.placeholder = "Program"; title.maxLength = 120; title.id = "ed-title";
+    const time = el("input"); time.type = "text"; time.value = draft ? draft.time : (it.time || ""); time.placeholder = "Időpont (10:00, ebéd után…)"; time.maxLength = 30; time.id = "ed-time"; time.style.flex = "0 1 190px";
     row.appendChild(title); row.appendChild(time); ed.appendChild(row);
-    const note = el("input"); note.type = "text"; note.value = it.note || ""; note.placeholder = "Részletek: cím, jegyek, ki vezet…"; note.maxLength = 200; note.id = "ed-note"; ed.appendChild(note);
-    const em = el("div", "emojis"); let chosen = it.emoji || autoEmoji(it.title || "");
+    const note = el("input"); note.type = "text"; note.value = draft ? draft.note : (it.note || ""); note.placeholder = "Részletek: cím, jegyek, ki vezet…"; note.maxLength = 200; note.id = "ed-note"; ed.appendChild(note);
+    const em = el("div", "emojis"); let chosen = (draft && draft.emoji) || it.emoji || autoEmoji(it.title || "");
     EMOJIS.forEach(e => { const b = el("button", e === chosen ? "on" : "", e); b.type = "button"; b.addEventListener("click", () => { chosen = e; em.querySelectorAll("button").forEach(x => x.classList.toggle("on", x.textContent === e)); }); em.appendChild(b); });
     ed.appendChild(em);
     const act = el("div", "actions");
@@ -177,7 +185,7 @@
     del.addEventListener("click", async () => { if (del.dataset.armed !== "1") { del.dataset.armed = "1"; del.textContent = "Biztos törlöd?"; return; } editing = null; await mutate({ op: "delete", collection: "items", id: it.id }); });
     const right = el("div"); right.style.display = "flex"; right.style.gap = "6px";
     const cancel = el("button", "btn ghost", "Mégse"); cancel.type = "button"; cancel.addEventListener("click", () => { editing = null; renderItems(); });
-    const save = el("button", "btn", "Mentés"); save.type = "button";
+    const save = el("button", "btn", "Mentés"); save.type = "button"; save.dataset.edsave = "1";
     save.addEventListener("click", async () => {
       const data = { title: title.value.trim() || it.title, time: time.value.trim(), note: note.value.trim(), emoji: chosen };
       save.disabled = true; editing = null;
@@ -185,7 +193,8 @@
       if (!ok) { editing = it.id; renderItems(); }
     });
     right.appendChild(cancel); right.appendChild(save); act.appendChild(del); act.appendChild(right); ed.appendChild(act);
-    setTimeout(() => title.focus(), 0);
+    const refocus = draft ? ({ "ed-title": title, "ed-time": time, "ed-note": note })[draft.focus] : title;
+    if (refocus) setTimeout(() => refocus.focus(), 0);
     return ed;
   }
 
@@ -206,7 +215,7 @@
     const r = $("#roster"); r.textContent = "";
     if (!people.length) { r.appendChild(el("div", "empty", "Még senki sincs a listán. Add hozzá magad.")); return; }
     people.slice().sort((a, b) => String(a.at).localeCompare(String(b.at))).forEach(p => {
-      const chip = el("div", "person"); const ava = el("span", "ava", (p.name || "?").trim().slice(0, 1).toUpperCase()); ava.style.background = colorFor(p.name || "?"); chip.appendChild(ava);
+      const chip = el("div", "person"); const ava = el("span", "ava", String(p.name || "?").trim().slice(0, 1).toUpperCase()); ava.style.background = colorFor(p.name || "?"); chip.appendChild(ava);
       chip.appendChild(document.createTextNode(p.name || "Valaki")); if (p.when) chip.appendChild(el("small", null, " · " + p.when));
       const d = el("button", "del", "×"); d.title = "Eltávolítás"; d.dataset.delperson = p.id; chip.appendChild(d); r.appendChild(chip);
     });
@@ -258,6 +267,7 @@
   });
 
   function setupSortables() {
+    if (!window.Sortable) return;
     document.querySelectorAll(".list").forEach(list => {
       const s = Sortable.create(list, {
         group: "plan", handle: ".grip", animation: 140, draggable: ".chip", ghostClass: "sortable-ghost", chosenClass: "sortable-chosen", fallbackTolerance: 3,
@@ -266,9 +276,9 @@
         onEnd: async (evt) => {
           dragging = false; document.querySelectorAll(".list.drop-over").forEach(l => l.classList.remove("drop-over"));
           const lists = new Set([evt.from, evt.to]); const writes = [];
-          lists.forEach(l => { const day = l.dataset.day; [...l.querySelectorAll(".chip")].forEach((chip, idx) => { const it = items.find(i => i.id === chip.dataset.id); if (!it) return; if ((it.day || "") !== day || (it.order ?? 0) !== idx) { it.day = day; it.order = idx; writes.push({ op: "update", collection: "items", id: it.id, data: { day, order: idx } }); } }); });
-          if (writes.length) await mutate(writes);
-          if (pendingRender) { pendingRender = false; renderItems(); }
+          lists.forEach(l => { const day = l.dataset.day; [...l.querySelectorAll(".chip")].forEach((chip, idx) => { const it = items.find(i => i.id === chip.dataset.id); if (!it) return; if ((it.day || "") !== day || (it.order ?? 0) !== idx) { writes.push({ op: "update", collection: "items", id: it.id, data: { day, order: idx } }); } }); });
+          const ok = writes.length ? await mutate(writes) : true;
+          if (!ok || pendingRender) { pendingRender = false; renderItems(); }
         },
       });
       sortables.push(s);
@@ -276,9 +286,13 @@
   }
 
   async function start() {
-    renderItems(); renderComments(); renderPeople(); renderPacking(); setupSortables();
+    let cached = null;
+    try { cached = JSON.parse(localStorage.getItem(PLAN_KEY) || "null"); } catch (e) {}
+    if (cached && typeof cached.version === "number") { adopt(cached); state.version = -1; fromCache = true; }
+    else { renderItems(); renderComments(); renderPeople(); renderPacking(); }
+    setupSortables();
     await refresh();
-    if (state.version < 0) setStatus("Nem érem el a szervert. Töltsd újra kicsit később.", false);
+    if (state.version < 0) setStatus(fromCache ? OFFLINE_CACHED : "Nem érem el a szervert. Töltsd újra kicsit később.", false);
     schedulePoll();
     if ("serviceWorker" in navigator) { navigator.serviceWorker.register("sw.js").catch(() => {}); }
   }
