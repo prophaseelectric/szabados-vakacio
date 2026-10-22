@@ -1,6 +1,6 @@
 # Szabados őszi vakáció
 
-Family trip planner PWA for Oct 25–31, 2026. No sign-in: anyone with the link can edit. Hosted on Azure Static Web Apps (free tier) with a managed Azure Functions API and one JSON document in Azure Blob Storage.
+Family trip planner PWA for Oct 25 to Nov 2, 2026. No sign-in: anyone with the link can edit. Hosted on Azure Static Web Apps (free tier) with a managed Azure Functions API and one JSON document in Azure Blob Storage.
 
 ```
 app/   static PWA (index.html, app.js, app.css, manifest, service worker, icons)
