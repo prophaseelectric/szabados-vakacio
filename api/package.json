@@ -1,0 +1,16 @@
+{
+  "name": "szabados-vakacio-api",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/functions/*.js",
+  "scripts": {
+    "start": "func start"
+  },
+  "dependencies": {
+    "@azure/functions": "^4.5.0",
+    "@azure/storage-blob": "^12.24.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

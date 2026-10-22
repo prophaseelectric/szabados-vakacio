@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Szabados őszi vakáció</title>
+<meta name="description" content="Közös heti tervező a 2026. október 25–31-i San Diegó-i útra.">
+<meta name="theme-color" content="#FF7A59" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#B5412D" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vakáció">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pacifico&family=Fredoka:wght@500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<div class="hero">
+  <svg class="sun" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="54" fill="#FFF3C4" opacity="0.9"/><g stroke="#FFF3C4" stroke-width="7" stroke-linecap="round" opacity="0.7"><line x1="100" y1="14" x2="100" y2="34"/><line x1="100" y1="166" x2="100" y2="186"/><line x1="14" y1="100" x2="34" y2="100"/><line x1="166" y1="100" x2="186" y2="100"/><line x1="39" y1="39" x2="53" y2="53"/><line x1="147" y1="147" x2="161" y2="161"/><line x1="39" y1="161" x2="53" y2="147"/><line x1="147" y1="53" x2="161" y2="39"/></g></svg>
+  <svg class="palms" viewBox="0 0 1200 120" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><g fill="#3a2a1a"><path d="M60 120 L68 60 Q80 30 60 10 Q85 20 90 50 Q110 25 140 30 Q110 40 100 60 Q130 60 150 80 Q120 70 98 72 L92 120 Z"/><path d="M1100 120 L1092 55 Q1080 25 1100 5 Q1075 15 1070 45 Q1050 20 1020 25 Q1050 35 1060 55 Q1030 55 1010 75 Q1040 65 1062 67 L1068 120 Z"/><path d="M980 120 L985 80 Q992 62 980 50 Q996 56 999 74 Q1012 60 1030 62 Q1012 68 1006 80 Q1024 80 1036 92 Q1018 86 1004 87 L1000 120 Z"/></g></svg>
+  <div class="hero-in">
+    <p class="eyebrow">2026. október 25–31. · San Diego, Kalifornia</p>
+    <h1>Szabados őszi vakáció</h1>
+    <p class="sub">A közös heti tervünk. Húzd a programokat másik napra, koppints egyre az időpont megadásához, jelezd, hogy benne vagy, és írj jegyzetet bárhová.</p>
+    <div class="hero-row">
+      <div class="who">
+        <label for="myname">A neved</label>
+        <input type="text" id="myname" placeholder="Hogy tudjuk, ki kicsoda" maxlength="40" autocomplete="off">
+      </div>
+      <div class="status" id="status"><span class="dot"></span><span id="statustext">Kapcsolódás…</span></div>
+    </div>
+  </div>
+  <svg class="waves" viewBox="0 0 1200 46" preserveAspectRatio="none" aria-hidden="true"><path d="M0 24 C 150 46 300 2 450 22 C 600 42 750 4 900 22 C 1050 40 1150 10 1200 18 L1200 46 L0 46 Z"/></svg>
+</div>
+
+<div class="wrap">
+  <div class="banner" id="banner" hidden></div>
+
+  <section class="card">
+    <div class="section-head"><h2><span class="em">🙋‍♀️</span>Kik jönnek</h2><p>Add hozzá magad az érkezés idejével, hogy tudjuk a létszámot.</p></div>
+    <div class="roster" id="roster"></div>
+    <div class="add">
+      <input type="text" id="p-name" placeholder="Név" maxlength="40">
+      <input type="text" id="p-when" class="short" placeholder="Érkezés (pl. szombat este, 18:40-es járat)" maxlength="60">
+      <button class="btn" data-addperson="1">Hozzáadás</button>
+    </div>
+  </section>
+
+  <section class="ideas">
+    <div class="section-head"><h2><span class="em">🏄</span>Ötletpolc</h2><p>Ide gyűjtsd az ötleteket. Koppints a „Benne vagyok”-ra szavazáshoz, és húzd egy napra, ha eldőlt.</p></div>
+    <div class="list" id="list-ideas" data-day=""></div>
+    <div class="add"><input type="text" id="add-ideas" placeholder="Balboa Park, Torrey Pines, halas taco Ocean Beachen…" maxlength="120"><button class="btn coral" data-add="">Ötlet hozzáadása</button></div>
+  </section>
+
+  <section>
+    <div class="section-head" style="margin-bottom:12px"><h2><span class="em">🌴</span>A hét</h2><p>Október 31. Halloween és az utolsó este. A tengerparttól általában 20–40 perc az út autóval.</p></div>
+    <div class="days" id="days"></div>
+  </section>
+
+  <section class="bottom">
+    <div class="card">
+      <div class="section-head"><h2><span class="em">🧳</span>Csomagolási lista</h2><p>Közös lista. Pipáld ki, ami már a táskában van.</p></div>
+      <div class="pack" id="pack"></div>
+      <div class="add"><input type="text" id="add-pack" placeholder="Naptej, Halloween-jelmezek, túracipő…" maxlength="80"><button class="btn" data-addpack="1">Hozzáadás</button></div>
+    </div>
+    <div class="card">
+      <div class="section-head"><h2><span class="em">📣</span>Üzenőfal</h2></div>
+      <div id="general-comments"></div>
+      <div class="cform" data-cday="general">
+        <textarea id="gc-text" placeholder="Kérdések, kérések, kinek kell gyerekülés…" maxlength="600"></textarea>
+        <button class="btn" data-comment="general">Küldés</button>
+      </div>
+    </div>
+  </section>
+  <p class="foot">Nincs bejelentkezés. Aki ismeri a linket, az szerkesztheti. Add a telefonod kezdőképernyőjéhez, hogy appként nyíljon.</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
