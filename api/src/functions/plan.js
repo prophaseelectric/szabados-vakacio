@@ -14,11 +14,14 @@ function emptyState() {
   return { version: 0, items: {}, comments: {}, people: {}, packing: {}, meals: {} };
 }
 
-function blobClient() {
+function containerClient() {
   const conn = process.env.STORAGE_CONNECTION || process.env.AzureWebJobsStorage;
   if (!conn) throw new Error("STORAGE_CONNECTION app setting is missing");
-  const svc = BlobServiceClient.fromConnectionString(conn);
-  return svc.getContainerClient(CONTAINER).getBlockBlobClient(BLOB);
+  return BlobServiceClient.fromConnectionString(conn).getContainerClient(CONTAINER);
+}
+
+function blobClient() {
+  return containerClient().getBlockBlobClient(BLOB);
 }
 
 async function readState(client) {
@@ -29,7 +32,7 @@ async function readState(client) {
     return { state, etag: dl.etag };
   } catch (e) {
     if (e.statusCode === 404) {
-      await client.getContainerClient().createIfNotExists();
+      await containerClient().createIfNotExists();
       return { state: emptyState(), etag: null };
     }
     throw e;
