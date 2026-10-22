@@ -1,6 +1,6 @@
 // Shell cache for offline opening; API always goes to the network.
-const CACHE = "vakacio-v1";
-const SHELL = ["/", "/index.html", "/app.css", "/app.js", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png"];
+const CACHE = "vakacio-v2";
+const SHELL = ["/", "/index.html", "/app.css", "/app.js", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/fonts/figtree-latin.woff2", "/fonts/figtree-latin-ext.woff2"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
