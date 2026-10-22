@@ -8,6 +8,8 @@
     { key: "2026-10-29", label: "Csütörtök", date: "okt. 29." },
     { key: "2026-10-30", label: "Péntek", date: "okt. 30." },
     { key: "2026-10-31", label: "Szombat", date: "okt. 31.", tag: "Halloween 🎃" },
+    { key: "2026-11-01", label: "Vasárnap", date: "nov. 1." },
+    { key: "2026-11-02", label: "Hétfő", date: "nov. 2.", tag: "Indulás haza" },
   ];
   const MEALS = [["breakfast", "Reggeli"], ["lunch", "Ebéd"], ["dinner", "Vacsora"]];
   const EMOJIS = ["📍","🏖️","🌊","🐬","🎢","🧱","🥾","🌮","🍦","🚤","🎃","🦁","🛶","⛵","🍕","☕","🎡","🌅","🛍️","🏛️"];
