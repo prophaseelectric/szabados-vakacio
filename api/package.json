@@ -11,6 +11,6 @@
     "@azure/storage-blob": "^12.24.0"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   }
 }
